@@ -4,75 +4,66 @@
  */
 package todofornewhopescharity;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.*;
+import java.net.*;
 
 /**
  *
  * @author liamf
  */
 public class ToDoClient {
-        private static InetAddress host;
+ private static InetAddress host;
     private static final int PORT = 1234;
-    private static DatagramSocket dgramSocket;
-    private static DatagramPacket inPacket, outPacket;
-    private static byte[] buffer;
 
     public static void main(String[] args) {
-    try 
-    {
+     try 
+     {
         host = InetAddress.getLocalHost();
-    } 
-    catch(UnknownHostException e) 
-    {
-        System.out.println("Host ID not found!");
-        System.exit(1);
-    }
-    run();
-}
-
-private static void run() 
-{
+     } 
+     catch(UnknownHostException e) 
+     {
+	System.out.println("Host ID not found!");
+	System.exit(1);
+     }
+     run();
+   }
+    
+   private static void run() {
+    Socket link = null;				//Step 1.
     try 
     {
-        dgramSocket = new DatagramSocket();		//Step 1.
+	link = new Socket(host,PORT);		//Step 1.
+        //link = new Socket( "192.168.0.59", PORT);
+	BufferedReader in = new BufferedReader(new InputStreamReader(link.getInputStream()));//Step 2.
+	PrintWriter out = new PrintWriter(link.getOutputStream(),true);	 //Step 2.
+
 	//Set up stream for keyboard entry...
-	BufferedReader userEntry = new BufferedReader(
-                                        new InputStreamReader(System.in));
-	String message=null;
-        String response=null;
-	do 
-        {
-            System.out.println("Enter message: ");
-            message = userEntry.readLine();
-            if (!message.equals("***CLOSE***")) 
-            {
-		outPacket = new DatagramPacket(message.getBytes(),message.length(), host, PORT);    //Step 2.
-		dgramSocket.send(outPacket);	//Step 3.
-		
-                buffer = new byte[256];     //Step 4.
-		inPacket = new DatagramPacket(buffer, buffer.length); 	//Step 5.
-		dgramSocket.receive(inPacket);	//Step 6.
-		response = new String(inPacket.getData(), 0, inPacket.getLength());	//Step 7.
-		System.out.println("\nSERVER> " + response);
-            }
-	}while (!message.equals("***CLOSE***"));
-        
+	BufferedReader userEntry =new BufferedReader(new InputStreamReader(System.in));
+	String message = null;
+        String response= null;
+	
+        System.out.println("Enter message to be sent to server: ");
+        message =  userEntry.readLine();
+        out.println(message); 		//Step 3.
+        response = in.readLine();		//Step 3.
+        System.out.println("\nSERVER RESPONSE> " + response);
     } 
-    catch(IOException e) 
+    catch(IOException e)
     {
-        e.printStackTrace();
+	e.printStackTrace();
     } 
     finally 
     {
-        System.out.println("\n Closing connection... ");
-        dgramSocket.close();	//Step 8.
-     }
-}
-}
+        try 
+        {
+            System.out.println("\n* Closing connection... *");
+            link.close();				//Step 4.
+	}catch(IOException e)
+        {
+            System.out.println("Unable to disconnect/close!");
+            System.exit(1);
+	}
+    }
+ } // finish run method
+}  //finish the class
 

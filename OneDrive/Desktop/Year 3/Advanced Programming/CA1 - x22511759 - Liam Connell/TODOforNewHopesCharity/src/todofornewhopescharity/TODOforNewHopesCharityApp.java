@@ -4,13 +4,26 @@
  */
 package todofornewhopescharity;
 
+import java.util.Scanner;
+
 /**
  *
  * @author liamf
  */
 public class TODOforNewHopesCharityApp {
+
     public static void main(String[] args) {
-        // 
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Type 'server' to start server or 'client' to start the client:");
+        String choice = scanner.nextLine().trim().toLowerCase();
+
+        if (choice.equals("server")) { //starting the server
+            ToDoServer.main(args);  
+        } else if (choice.equals("client")) { //starting the client
+            ToDoClient.main(args);  
+        } else {
+            System.out.println("Invalid option. Please run the program again and choose 'server' or 'client'.");
+        }
     }
-    
+
 }
