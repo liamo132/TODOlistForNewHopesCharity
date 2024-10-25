@@ -14,17 +14,18 @@ import java.util.*;
  * @author razi
  */
 public class ToDoServer {
-    private static final int PORT = 1234; // Updated port number
+
+    private static final int PORT = 1234;
     private static ServerSocket servSock;
     private static Map<String, List<String>> todoMap = Collections.synchronizedMap(new HashMap<>());
 
     public static void main(String[] args) {
         System.out.println("Opening port...\n");
         try {
-            servSock = new ServerSocket(PORT); // Create a server socket
-            System.out.println("Server is running...");
+            servSock = new ServerSocket(PORT); // Step 1, creating a server socket
+            System.out.println("Server is running...");// confirm server is running
         } catch (IOException e) {
-            System.out.println("Unable to attach to port!"); // Handle error if port is unavailable
+            System.out.println("Unable to attach to port!"); // error if port is unavailable
             System.exit(1);
         }
 
@@ -41,16 +42,16 @@ public class ToDoServer {
 
     // Inner class to handle client connections in separate threads
     private static class ClientHandler extends Thread {
+
         private Socket clientSocket;
 
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
         }
 
-       @Override
+        @Override
         public void run() {
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
                 String message;
                 while ((message = in.readLine()) != null) {
                     System.out.println("Message received from client: " + message);
@@ -92,40 +93,57 @@ public class ToDoServer {
     }
 
     // Handle actions outside the ClientHandler class
- private static String handleAction(String action, String date, String description) throws IncorrectActionException {
-    synchronized (todoMap) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM", Locale.ENGLISH);
-        try {
-            switch (action) {
-                case "add":
-                    Date taskDate = sdf.parse(date);
-                    String formattedDateAdd = sdf.format(taskDate);
-                    System.out.println("Adding task for date: " + formattedDateAdd);
-                    List<String> tasksAdd = todoMap.getOrDefault(formattedDateAdd, new ArrayList<>());
-                    tasksAdd.add(description);
-                    todoMap.put(formattedDateAdd, tasksAdd);
-                    return "Task added for " + date + ": " + description;
-                case "list":
-                    String formattedDateList = sdf.format(sdf.parse(date));
-                    System.out.println("Listing tasks for date: " + formattedDateList);
-                    List<String> tasksList = todoMap.get(formattedDateList);
-                    if (tasksList == null || tasksList.isEmpty()) {
-                        return "No tasks for " + date;
-                    } else {
-                        return "Tasks for " + date + ": " + String.join(", ", tasksList);
-                    }
-                default:
-                    throw new IncorrectActionException("Invalid action: " + action);
+    private static String handleAction(String action, String date, String description) throws IncorrectActionException {
+        synchronized (todoMap) {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM", Locale.ENGLISH);
+            try {
+                switch (action.toLowerCase()) {
+                    case "add":
+                        Date taskDate = sdf.parse(date); // Ensure correct format for date
+                        String formattedDateAdd = sdf.format(taskDate);
+                        List<String> tasksAdd = todoMap.getOrDefault(formattedDateAdd, new ArrayList<>());
+                        tasksAdd.add(description);
+                        todoMap.put(formattedDateAdd, tasksAdd); // Add task to map
+                        return "Task added for " + date + ": " + description;
+
+                    case "list":
+                        if (date.equalsIgnoreCase("all")) {
+                            if (todoMap.isEmpty()) {
+                                return "No tasks available.";
+                            }
+                            StringBuilder allTasks = new StringBuilder();
+                            for (List<String> taskList : todoMap.values()) {
+                                for (String task : taskList) {
+                                    allTasks.append(task).append(", ");
+                                }
+                            }
+                            return allTasks.length() > 0 ? allTasks.substring(0, allTasks.length() - 2) : "No tasks found.";
+                        } else if (date.isEmpty()) {
+                            return "Please specify a date or 'all' to list all tasks.";
+                        } else {
+                            Date listDate = sdf.parse(date); // Parse date
+                            String formattedDateList = sdf.format(listDate);
+                            List<String> tasksList = todoMap.get(formattedDateList);
+                            if (tasksList == null || tasksList.isEmpty()) {
+                                return "No tasks for " + date;
+                            } else {
+                                return String.join(", ", tasksList);  // Just return the tasks for that date
+                            }
+                        }
+
+                    default:
+                        throw new IncorrectActionException("Invalid action: " + action);
+                }
+            } catch (ParseException e) {
+                throw new IncorrectActionException("Invalid date format: " + date);
             }
-        } catch (ParseException e) {
-            throw new IncorrectActionException("Invalid date format: " + date);
         }
     }
-}
-}
 
+}
 // Custom exception for incorrect actions
 class IncorrectActionException extends Exception {
+
     public IncorrectActionException(String message) {
         super(message);
     }

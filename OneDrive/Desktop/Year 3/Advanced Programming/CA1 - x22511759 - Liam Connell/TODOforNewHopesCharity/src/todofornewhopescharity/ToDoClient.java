@@ -35,11 +35,15 @@ public class ToDoClient {
             PrintWriter out = new PrintWriter(link.getOutputStream(), true); //Step 2.
             //Set up stream for keyboard entry...
             BufferedReader userEntry = new BufferedReader(new InputStreamReader(System.in));
+            
+            // instruction message
+            System.out.println("Add or View tasks on your TODO List:   add;date;task   or   list;all/date \n");
+                    
             String message = null;
             String response = null;
             while (true) {
                 // Read message from user
-                System.out.println("Enter message to be sent to server: ");
+                System.out.println("Enter message to be sent to server:");
                 message = userEntry.readLine();
                 out.println(message); // Send message to server
                 response = in.readLine(); // Read response from server
