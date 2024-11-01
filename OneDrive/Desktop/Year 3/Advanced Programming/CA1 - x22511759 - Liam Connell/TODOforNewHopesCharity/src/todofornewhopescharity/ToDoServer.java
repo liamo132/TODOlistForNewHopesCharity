@@ -11,12 +11,15 @@ import java.util.*;
 
 /**
  *
- * @author razi
+ * @author liamf
  */
 public class ToDoServer {
 
     private static final int PORT = 1234;
     private static ServerSocket servSock;
+
+    /* the use of hashmap alllows me to use the view date method as the task is mapped to certain dates.
+    also as its "synchronisedmap" i can make multiple threads can access the map */
     private static Map<String, List<String>> todoMap = Collections.synchronizedMap(new HashMap<>());
 
     public static void main(String[] args) {
@@ -40,7 +43,7 @@ public class ToDoServer {
         }
     }
 
-    // Inner class to handle client connections in separate threads
+    //inner class to handlemore than one client connections
     private static class ClientHandler extends Thread {
 
         private Socket clientSocket;
@@ -60,13 +63,13 @@ public class ToDoServer {
                         break; // Break the loop to close the connection
                     }
 
-                    // Split message into action and description
+                    // Split message into action, date and description
                     String[] parts = message.split(";", 3);
-                    String action = parts[0].trim().toLowerCase();
-                    String date = parts.length > 1 ? parts[1].trim() : "";
-                    String description = parts.length > 2 ? parts[2].trim() : "";
+                    String action = parts[0].trim().toLowerCase();//action as in add or view
+                    String date = parts.length > 1 ? parts[1].trim() : "";//date is the second portion
+                    String description = parts.length > 2 ? parts[2].trim() : "";//description is the ToDo
 
-                    // Handle the action and generate response
+                    //handle the action and generate response
                     String response;
                     try {
                         response = handleAction(action, date, description);
@@ -74,7 +77,7 @@ public class ToDoServer {
                         response = "Error: " + e.getMessage();
                     }
 
-                    // Send response back to client
+                    //send response back to client
                     out.println(response);
                 }
             } catch (IOException e) {
@@ -95,15 +98,15 @@ public class ToDoServer {
     // Handle actions outside the ClientHandler class
     private static String handleAction(String action, String date, String description) throws IncorrectActionException {
         synchronized (todoMap) {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM", Locale.ENGLISH);
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM", Locale.ENGLISH);// this plugin allows for easy use of date, and easier to store in hashmap
             try {
                 switch (action.toLowerCase()) {
                     case "add":
-                        Date taskDate = sdf.parse(date); // Ensure correct format for date
+                        Date taskDate = sdf.parse(date); // ensure correct format for date
                         String formattedDateAdd = sdf.format(taskDate);
                         List<String> tasksAdd = todoMap.getOrDefault(formattedDateAdd, new ArrayList<>());
                         tasksAdd.add(description);
-                        todoMap.put(formattedDateAdd, tasksAdd); // Add task to map
+                        todoMap.put(formattedDateAdd, tasksAdd); // add task to map
                         return "Task added for " + date + ": " + description;
 
                     case "list":
@@ -141,7 +144,8 @@ public class ToDoServer {
     }
 
 }
-// Custom exception for incorrect actions
+//exception for incorrect actions, so when an unsopperted action is requested, it throws an Exception
+
 class IncorrectActionException extends Exception {
 
     public IncorrectActionException(String message) {

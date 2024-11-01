@@ -14,7 +14,7 @@ import java.net.*;
 public class ToDoClient {
 
     private static InetAddress host;
-    private static final int PORT = 1234;
+    private static final int PORT = 1234; //port is the same as Server, if differetn they wont sync
 
     public static void main(String[] args) {
         try {
